@@ -1,6 +1,4 @@
 from astropy.table import Table, vstack
-import numpy as np
-import pandas as pd
 from pathlib import Path
 import subprocess
 import yaml
