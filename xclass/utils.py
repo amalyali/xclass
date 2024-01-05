@@ -9,6 +9,8 @@ wave_eff = {'W1': 33526.0,
 w1_nu_effective = (const.c / (33526.0 * u.AA)).to(u.Hz).value
 w2_nu_effective = (const.c / (46028.0 * u.AA)).to(u.Hz).value
 G_nu_effective = (const.c / (6230.06 * u.AA)).to(u.Hz).value
+suffix_allwise = '_ALLWISE'
+suffix_gaia = '_GAIA_DR3'
 
 
 def convert_ab_mag_to_fnu(_mag_ab):
@@ -28,7 +30,6 @@ def compute_gaia_features(_t: Table) -> Table:
     :rtype:
     """
     # Parallax and motion features
-    suffix_gaia = '_GAIA_DR3'
     _t['PLX_SIG'] = _t['parallax%s' % suffix_gaia] / _t['parallax_error%s' % suffix_gaia]
     _t['PM_SIG'] = np.sqrt(np.power(_t['pmra%s' % suffix_gaia] / _t['pmra_error%s' % suffix_gaia], 2.) +
                                  np.power(_t['pmdec%s' % suffix_gaia] / _t['pmdec_error%s' % suffix_gaia], 2.))
@@ -54,8 +55,6 @@ def compute_wise_features(_t: Table) -> Table:
     :return:
     :rtype:
     """
-    suffix_allwise = '_ALLWISE'
-    suffix_gaia = '_GAIA_DR3'
     _t['W1_W2'] = _t['W1mag%s' % suffix_allwise] - _t['W2mag%s' % suffix_allwise]
 
     # Compute flux ratios
