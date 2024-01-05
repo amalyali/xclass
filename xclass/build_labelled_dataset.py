@@ -114,9 +114,7 @@ def compute_features(_t: Table) -> Table:
     return _t[features]
 
 
-if __name__ == '__main__':
-    cfg = yaml.safe_load(Path('../cfg/train.yml').read_text())
-    ver = 'v0001'
+def main(_cfg: dict, _ver: str):
     f_training = '../data/train_%s.fits' % ver
     f_xmm = '../data/cats/4XMM_slim_DR13cat_v1.0.fits'
     f_training_xray = '../data/train_%s_xray.fits' % ver
@@ -126,22 +124,24 @@ if __name__ == '__main__':
     # Read in all catalogues and stack into single file.
     tables = []
     for label, cfg_data in cfg[ver].items():
-        print(label, cfg_data)
-        print(read_cat(cfg_data['PATH'], cfg_data, label))
         tables.append(read_cat(cfg_data['PATH'], cfg_data, label))
     tables = vstack(tables)
     tables.write(f_training, format='fits', overwrite=True)
-    print(tables)
 
+    # Match to multi-wavelength counterparts
     match_params = "'RA_BEST DEC_BEST 1'"
     match_params_xmm = "'SC_RA SC_DEC 5'"
     suffix_xmm = 'XMM_'
-
-
     stilts_match(f_training, f_xmm, match_params, match_params_xmm, suffix_xmm, f_training_xray)
     add_multiwavelength_counterparts(f_training_xray, f_training_multiwavelength)
-    print(cfg)
 
+    # Compute features and store in file
     t = Table.read(f_training_multiwavelength)
     t = compute_features(t)
     t.write(f_training_features, format='fits', overwrite=True)
+
+
+if __name__ == '__main__':
+    cfg = yaml.safe_load(Path('../cfg/train.yml').read_text())
+    ver = 'v0001'
+    main(cfg, ver)
