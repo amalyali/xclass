@@ -1,3 +1,4 @@
+import argparse
 from astropy.table import Table, vstack
 from pathlib import Path
 import subprocess
@@ -22,20 +23,6 @@ def read_cat(_f: str, _cfg: dict, _label: str) -> Table:
 def stilts_match(_cat1: str, _cat2: str, _values1: str, _values2: str, _suffix2: str, _output_cat: str) -> None:
     """
     Run stilts cross-match between primary and secondary catalogue
-    :param _cat1:
-    :type _cat1:
-    :param _cat2:
-    :type _cat2:
-    :param _values1:
-    :type _values1:
-    :param _values2:
-    :type _values2:
-    :param _suffix2:
-    :type _suffix2:
-    :param _output_cat:
-    :type _output_cat:
-    :return:
-    :rtype:
     """
     try:
         cmds = ["java -jar %s tmatch2" % stilts,
@@ -138,6 +125,12 @@ def main(_cfg: dict, _ver: str):
 
 
 if __name__ == '__main__':
-    cfg = yaml.safe_load(Path('../cfg/train.yml').read_text())
-    ver = 'v0001'
-    main(cfg, ver)
+    parser = argparse.ArgumentParser(
+        prog='build_labelled_dataset ',
+        description='Build a training dataset for tree-based classifiers.')
+    parser.add_argument('filename')  # positional argument
+    parser.add_argument('-v', '--v', description='Version of training set to build.')  # option that takes a value
+    parser.add_argument('-cfg', '--cfg', description='Relative path of config file.')
+    args = parser.parse_args()
+
+    main(yaml.safe_load(Path(args.cfg).read_text()), args.ver)
