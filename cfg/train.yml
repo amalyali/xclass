@@ -3,6 +3,10 @@ v0001:
     PATH: '../data/cats/veron_cetty_agn_radec_pm_cleaned.fits'
     RA_BEST: 'RA'
     DEC_BEST: 'DEC'
+  STAR:
+    PATH: '../data/cats/marton2019_Pms0.999_Preal0.5.fits'
+    RA_BEST: 'RA_ICRS'
+    DEC_BEST: 'DE_ICRS'
   HMXRB:
     PATH: '../data/cats/hmxrb_neumann_2023.fits'
     RA_BEST: 'RA_ICRS'
