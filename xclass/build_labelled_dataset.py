@@ -1,7 +1,3 @@
-"""
-
-"""
-from astropy.io import fits
 from astropy.table import Table, vstack
 import numpy as np
 import pandas as pd
@@ -10,28 +6,15 @@ import subprocess
 import yaml
 #from xclass.utils import test_fn
 #from . import utils
-from astropy import constants as const
-from astropy import units as u
+from typing import Union
 
 stilts = '../data/tools/stilts.jar'
-wave_eff = {'W1': 33526.0,
-            'W2': 46028.0,
-            'G': 6230.06}
-w1_nu_effective = (const.c / (33526.0 * u.AA)).to(u.Hz).value
-w2_nu_effective = (const.c / (46028.0 * u.AA)).to(u.Hz).value
-G_nu_effective = (const.c / (6230.06 * u.AA)).to(u.Hz).value
-
-
-def convert_ab_mag_to_fnu(_mag_ab):
-    """
-    abmag=-2.5log10(fnu)-48.6  where fnu in units of erg/s/cm2/Hzs
-    :return:
-    """
-    return np.power(10., (48.6 + _mag_ab) / -2.5)
 
 
 def read_cat(_f: str, _cfg: dict, _label: str) -> Table:
-
+    """
+    Read in the basic labelled source catalogue.
+    """
     cols = ['RA_BEST', 'DEC_BEST', 'LABEL']
     t = Table.read(_f)
     t['RA_BEST'] = t[_cfg['RA_BEST']]
@@ -40,10 +23,23 @@ def read_cat(_f: str, _cfg: dict, _label: str) -> Table:
     return t[cols]
 
 
-def stilts_match(_cat1, _cat2, _values1, _values2, _suffix2, _output_cat):
+def stilts_match(_cat1: str, _cat2: str, _values1: str, _values2: str, _suffix2: str, _output_cat: str) -> None:
     """
     Run stilts cross-match between primary and secondary catalogue
+    :param _cat1:
+    :type _cat1:
+    :param _cat2:
+    :type _cat2:
+    :param _values1:
+    :type _values1:
+    :param _values2:
+    :type _values2:
+    :param _suffix2:
+    :type _suffix2:
+    :param _output_cat:
+    :type _output_cat:
     :return:
+    :rtype:
     """
     try:
         cmds = ["java -jar %s tmatch2" % stilts,
@@ -67,7 +63,10 @@ def stilts_match(_cat1, _cat2, _values1, _values2, _suffix2, _output_cat):
         print(e)
 
 
-def add_multiwavelength_counterparts(_cat: str, _cat_output: str):
+def add_multiwavelength_counterparts(_cat: str, _cat_output: str) -> None:
+    """
+    Cross-match the input catalogue with the AllWISE and Gaia catalogues.
+    """
     cat_tmp = '%s_allwise.fits' % _cat[:-5]
     cmds = ["java -jar %s cdsskymatch" % stilts,
             "cdstable=ALLWISE",
@@ -100,51 +99,11 @@ def add_multiwavelength_counterparts(_cat: str, _cat_output: str):
     subprocess.check_call(cmd, shell=True)
 
 
-def compute_gaia_features(_t: Table) -> Table:
-    # Parallax and motion features
-    suffix_gaia = '_GAIA_DR3'
-    _t['PLX_SIG'] = _t['parallax%s' % suffix_gaia] / _t['parallax_error%s' % suffix_gaia]
-    _t['PM_SIG'] = np.sqrt(np.power(_t['pmra%s' % suffix_gaia] / _t['pmra_error%s' % suffix_gaia], 2.) +
-                                 np.power(_t['pmdec%s' % suffix_gaia] / _t['pmdec_error%s' % suffix_gaia], 2.))
-
-    # Distance and absolute mag
-    _t['INV_PLX'] = 1000. / _t['parallax%s' % suffix_gaia]  # in parsecs
-    _t['GAIA_ABS_MAG'] = _t['phot_g_mean_mag%s' % suffix_gaia] - 5 * np.log10(0.1 * _t['INV_PLX'])
-
-    # Flux ratios
-    _t['Bp_Rp'] = _t['phot_bp_mean_mag_GAIA_DR3'] - _t['phot_rp_mean_mag_GAIA_DR3']
-    _t['G_AB'] = _t['phot_g_mean_mag%s' % suffix_gaia] - (25.6884 - 25.7934)
-    _t['G_FNU'] = convert_ab_mag_to_fnu(_t['G_AB'])
-    _t['G_NUFNU'] = G_nu_effective * _t['G_FNU']
-    _t['Fx_over_FG'] = np.log10(_t['Fx'] / _t['G_NUFNU'])
-    return _t
-
-
-def compute_wise_features(_t: Table) -> Table:
-    suffix_allwise = '_ALLWISE'
-    suffix_gaia = '_GAIA_DR3'
-    _t['W1_W2'] = _t['W1mag%s' % suffix_allwise] - _t['W2mag%s' % suffix_allwise]
-
-    # Compute flux ratios
-    _t['W1_AB'] = _t['W1mag%s' % suffix_allwise] + 2.699
-    _t['W1_FNU'] = convert_ab_mag_to_fnu(_t['W1_AB'])
-    _t['W1_NUFNU'] = w1_nu_effective * _t['W1_FNU']
-    _t['Fx_over_FW1'] = np.log10(_t['Fx'] / _t['W1_NUFNU'])
-
-    # and colours
-    _t['G_W1'] = _t['phot_g_mean_mag%s' % suffix_gaia] - _t['W1mag%s' % suffix_allwise]
-    _t['G_W2'] = _t['phot_g_mean_mag%s' % suffix_gaia] - _t['W2mag%s' % suffix_allwise]
-    return _t
-
-
 def compute_features(_t: Table) -> Table:
     """
-
-    :return:
-    :rtype:
+    Add in additional feature columns to the table.
     """
     _t['Fx'] = _t['SC_EP_8_FLUX']  # 0.2--12 keV. 0.2-2 keV is EP_6.
-
     _t = compute_gaia_features(_t)
     _t = compute_wise_features(_t)
 
