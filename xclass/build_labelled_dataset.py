@@ -4,9 +4,7 @@ import pandas as pd
 from pathlib import Path
 import subprocess
 import yaml
-#from xclass.utils import test_fn
-#from . import utils
-from typing import Union
+from xclass.utils import *
 
 stilts = '../data/tools/stilts.jar'
 
