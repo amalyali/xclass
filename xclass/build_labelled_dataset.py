@@ -98,15 +98,15 @@ def compute_features(_t: Table) -> Table:
 
 
 def main(_cfg: dict, _ver: str):
-    f_training = '../data/train_%s.fits' % ver
+    f_training = '../data/train_%s.fits' % _ver
     f_xmm = '../data/cats/4XMM_slim_DR13cat_v1.0.fits'
-    f_training_xray = '../data/train_%s_xray.fits' % ver
-    f_training_multiwavelength = '../data/train_%s_xray_w_multiwavelength.fits' % ver
-    f_training_features = '../data/train_%s_features.fits' % ver
+    f_training_xray = '../data/train_%s_xray.fits' % _ver
+    f_training_multiwavelength = '../data/train_%s_xray_w_multiwavelength.fits' % _ver
+    f_training_features = '../data/train_%s_features.fits' % _ver
 
     # Read in all catalogues and stack into single file.
     tables = []
-    for label, cfg_data in cfg[ver].items():
+    for label, cfg_data in _cfg[_ver].items():
         tables.append(read_cat(cfg_data['PATH'], cfg_data, label))
     tables = vstack(tables)
     tables.write(f_training, format='fits', overwrite=True)
@@ -128,9 +128,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='build_labelled_dataset ',
         description='Build a training dataset for tree-based classifiers.')
-    parser.add_argument('filename')  # positional argument
-    parser.add_argument('-v', '--v', description='Version of training set to build.')  # option that takes a value
-    parser.add_argument('-cfg', '--cfg', description='Relative path of config file.')
+    parser.add_argument('-v', '--v', help='Version of training set to build.')  # option that takes a value
+    parser.add_argument('-cfg', '--cfg', help='Relative path of config file.')
     args = parser.parse_args()
 
-    main(yaml.safe_load(Path(args.cfg).read_text()), args.ver)
+    main(yaml.safe_load(Path(args.cfg).read_text()), args.v)

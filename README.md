@@ -11,7 +11,7 @@ python setup.py install
 ## Constructing a training dataset
 ```bash
 cd xclass
-python build_labelled_dataset.py
+python build_labelled_dataset.py -v 'v0001' -cfg '../cfg/train.yml'
 ```
 
 
